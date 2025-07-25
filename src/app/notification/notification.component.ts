@@ -1,81 +1,59 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { trigger, state, style, transition, animate } from '@angular/animations';
+import { NotificationService } from './notification.service';
 import { Subscription } from 'rxjs';
-import { Notification, NotificationService } from './notification.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-notification',
-  standalone: true,
-  imports: [CommonModule],
+  standalone: true, // Make component standalone
+  imports: [CommonModule], // Import CommonModule for *ngIf
   template: `
-    <div *ngIf="notification" class="toast-container" [@toastState]="'visible'">
-      <div class="toast" [ngClass]="notification.type">
-        {{ notification.message }}
-      </div>
+    <div *ngIf="message" class="notification show">
+      {{ message }}
     </div>
   `,
   styles: [`
-    .toast-container {
+    .notification {
       position: fixed;
       bottom: 20px;
-      right: 20px;
-      z-index: 1000;
-    }
-    .toast {
-      padding: 15px 25px;
-      border-radius: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #333;
       color: white;
-      font-weight: 500;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s, visibility 0.5s, transform 0.5s;
     }
-    .toast.success {
-      background-color: #28a745;
+    .notification.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
     }
-    .toast.error {
-      background-color: #dc3545;
-    }
-  `],
-  animations: [
-    trigger('toastState', [
-      state('void', style({
-        transform: 'translateY(100%)',
-        opacity: 0
-      })),
-      state('visible', style({
-        transform: 'translateY(0)',
-        opacity: 1
-      })),
-      transition('void => visible', animate('300ms ease-out')),
-      transition('visible => void', animate('300ms ease-in'))
-    ])
-  ]
+  `]
 })
 export class NotificationComponent implements OnInit, OnDestroy {
-  notification: Notification | null = null;
-  private subscription: Subscription | undefined;
-  private timer: any;
+  message: string | null = null;
+  private subscription!: Subscription;
 
-  constructor(private notificationService: NotificationService) { }
+  constructor(private notificationService: NotificationService) {}
 
-  ngOnInit() {
-    this.subscription = this.notificationService.notification$.subscribe(notification => {
-      this.notification = notification;
-      if (this.timer) {
-        clearTimeout(this.timer);
+  ngOnInit(): void {
+    // Subscribe to notification messages from the service
+    this.subscription = this.notificationService.notification$.subscribe(
+      (message) => {
+        this.message = message;
       }
-      if (notification) {
-        this.timer = setTimeout(() => {
-          this.notificationService.clear();
-        }, 3000); // Notification disappears after 3 seconds
-      }
-    });
+    );
   }
 
-  ngOnDestroy() {
-    this.subscription?.unsubscribe();
-    if (this.timer) {
-      clearTimeout(this.timer);
+  ngOnDestroy(): void {
+    // Unsubscribe to prevent memory leaks
+    if (this.subscription) {
+      this.subscription.unsubscribe();
     }
   }
 }
