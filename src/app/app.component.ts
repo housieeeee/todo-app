@@ -1,14 +1,10 @@
-import { Component, signal, OnInit } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
-import { FormsModule } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
 import { SupabaseService, Todo } from './services/supabase.service';
 
 @Component({
   selector: 'app-root',
-  standalone: true,
-  imports: [RouterOutlet, FormsModule],
   templateUrl: './app.component.html',
-  styleUrl: './app.scss'
+  styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
   todos: Todo[] = [];
@@ -16,7 +12,7 @@ export class AppComponent implements OnInit {
   loading: boolean = false;
   editingId: number | null = null;
   editingTask: string = '';
-  protected readonly title = signal('todo-app');
+  title = 'todo-app';
 
   constructor(private supabaseService: SupabaseService) {}
 

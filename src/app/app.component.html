@@ -1,0 +1,127 @@
+<div class="todo-app">
+  <div class="container">
+    <header class="app-header">
+      <h1 class="app-title">
+        <span class="icon">✓</span>
+        Todo List
+      </h1>
+      <div class="stats" *ngIf="totalTodos > 0">
+        <span class="stat-item">
+          <span class="stat-number">{{ completedTodos }}</span>
+          <span class="stat-label">completed</span>
+        </span>
+        <span class="stat-divider">|</span>
+        <span class="stat-item">
+          <span class="stat-number">{{ totalTodos }}</span>
+          <span class="stat-label">total</span>
+        </span>
+      </div>
+    </header>
+
+    <div class="add-todo-section">
+      <div class="input-group">
+        <input
+          type="text"
+          [(ngModel)]="newTask"
+          (keyup.enter)="addTodo()"
+          placeholder="What needs to be done?"
+          class="todo-input"
+          [disabled]="loading"
+        />
+        <button
+          (click)="addTodo()"
+          [disabled]="!newTask.trim() || loading"
+          class="add-btn"
+        >
+          <span *ngIf="!loading" class="btn-icon">+</span>
+          <span *ngIf="loading" class="loading-spinner"></span>
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="loading && todos.length === 0" class="loading-state">
+      <div class="loading-spinner-large"></div>
+      <p>Loading your todos...</p>
+    </div>
+
+    <div *ngIf="!loading && todos.length === 0" class="empty-state">
+      <div class="empty-icon">📝</div>
+      <h3>No todos yet</h3>
+      <p>Add your first todo above to get started!</p>
+    </div>
+
+    <div class="todo-list" *ngIf="todos.length > 0">
+      <div
+        *ngFor="let todo of todos; trackBy: trackByTodoId"
+        class="todo-item"
+        [class.completed]="todo.completed"
+      >
+        <div class="todo-content">
+          <button
+            (click)="toggleComplete(todo)"
+            class="checkbox"
+            [class.checked]="todo.completed"
+          >
+            <span class="checkmark" *ngIf="todo.completed">✓</span>
+          </button>
+
+          <div class="task-content" *ngIf="editingId !== todo.id">
+            <span class="task-text" [class.completed]="todo.completed">
+              {{ todo.task }}
+            </span>
+            <small class="task-date">
+              {{ formatDate(todo.created_at) }}
+            </small>
+          </div>
+
+          <div class="edit-content" *ngIf="editingId === todo.id">
+            <input
+              type="text"
+              [(ngModel)]="editingTask"
+              (keyup.enter)="saveEdit(todo.id!)"
+              (keyup.escape)="cancelEditing()"
+              class="edit-input"
+              #editInput
+            />
+          </div>
+        </div>
+
+        <div class="todo-actions">
+          <div *ngIf="editingId !== todo.id" class="action-buttons">
+            <button
+              (click)="startEditing(todo)"
+              class="action-btn edit-btn"
+              title="Edit"
+            >
+              ✏️
+            </button>
+            <button
+              (click)="deleteTodo(todo.id!)"
+              class="action-btn delete-btn"
+              title="Delete"
+            >
+              🗑️
+            </button>
+          </div>
+
+          <div *ngIf="editingId === todo.id" class="edit-buttons">
+            <button
+              (click)="saveEdit(todo.id!)"
+              class="action-btn save-btn"
+              title="Save"
+            >
+              ✓
+            </button>
+            <button
+              (click)="cancelEditing()"
+              class="action-btn cancel-btn"
+              title="Cancel"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
