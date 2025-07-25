@@ -7,14 +7,15 @@ import { AppComponent } from './app.component';
 
 @NgModule({
   declarations: [
-    AppComponent
+    // 1. REMOVE AppComponent FROM HERE
   ],
   imports: [
     BrowserModule,
     FormsModule,
-    BrowserAnimationsModule
+    BrowserAnimationsModule,
+    AppComponent // 2. ADD AppComponent HERE
   ],
   providers: [],
-  bootstrap: [AppComponent]
+  // 3. REMOVE bootstrap array since AppComponent is standalone
 })
 export class AppModule { }

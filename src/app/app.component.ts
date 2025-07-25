@@ -1,12 +1,21 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common'; // <-- 1. IMPORT
+import { FormsModule } from '@angular/forms';   // <-- 2. IMPORT
 import { SupabaseService, Todo } from './services/supabase.service';
 
 @Component({
   selector: 'app-root',
+  standalone: true, // <-- 3. MAKE SURE THIS IS TRUE
+  imports: [
+    CommonModule,   // <-- 4. ADD THIS FOR *ngIf, *ngFor
+    FormsModule     // <-- 5. ADD THIS FOR [(ngModel)]
+  ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
+  // ... the rest of your component code is correct and does not need to change ...
+
   todos: Todo[] = [];
   newTask: string = '';
   loading: boolean = false;
@@ -23,37 +32,37 @@ export class AppComponent implements OnInit {
   async loadTodos() {
     this.loading = true;
     const { data, error } = await this.supabaseService.getTodos();
-    
+
     if (error) {
       console.error('Error loading todos:', error);
     } else if (data) {
       this.todos = data;
     }
-    
+
     this.loading = false;
   }
 
   async addTodo() {
     if (!this.newTask.trim()) return;
-    
+
     this.loading = true;
     const { data, error } = await this.supabaseService.createTodo(this.newTask.trim());
-    
+
     if (error) {
       console.error('Error creating todo:', error);
     } else if (data && data[0]) {
       this.todos.unshift(data[0]);
       this.newTask = '';
     }
-    
+
     this.loading = false;
   }
 
   async toggleComplete(todo: Todo) {
     if (!todo.id) return;
-    
+
     const { data, error } = await this.supabaseService.toggleComplete(todo.id, !todo.completed);
-    
+
     if (error) {
       console.error('Error updating todo:', error);
     } else {
@@ -63,7 +72,7 @@ export class AppComponent implements OnInit {
 
   async deleteTodo(todoId: number) {
     const { error } = await this.supabaseService.deleteTodo(todoId);
-    
+
     if (error) {
       console.error('Error deleting todo:', error);
     } else {
@@ -83,11 +92,11 @@ export class AppComponent implements OnInit {
 
   async saveEdit(todoId: number) {
     if (!this.editingTask.trim()) return;
-    
-    const { data, error } = await this.supabaseService.updateTodo(todoId, { 
-      task: this.editingTask.trim() 
+
+    const { data, error } = await this.supabaseService.updateTodo(todoId, {
+      task: this.editingTask.trim()
     });
-    
+
     if (error) {
       console.error('Error updating todo:', error);
     } else {
@@ -105,12 +114,12 @@ export class AppComponent implements OnInit {
 
   formatDate(dateString?: string): string {
     if (!dateString) return '';
-    
+
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     if (diffDays === 1) {
       return 'Today';
     } else if (diffDays === 2) {
