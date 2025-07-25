@@ -1,78 +1,152 @@
-.todo-app {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-}
+<div class="todo-app">
+  <div class="container">
+    <!-- Header -->
+    <header class="app-header">
+      <h1 class="app-title">
+        <span class="icon" aria-hidden="true">✓</span>
+        Real-Time Todos
+      </h1>
+      <div class="stats" *ngIf="todos.length > 0">
+        <span class="stat-item">
+          <span class="stat-number">{{ completedTodosCount }}</span>
+          <span class="stat-label">completed</span>
+        </span>
+        <span class="stat-divider">|</span>
+        <span class="stat-item">
+          <span class="stat-number">{{ todos.length }}</span>
+          <span class="stat-label">total</span>
+        </span>
+      </div>
+    </header>
 
-.container {
-  max-width: 600px;
-  margin: 0 auto;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  animation: slideUp 0.6s ease-out;
-}
+    <!-- Add Todo Form -->
+    <div class="add-todo-section">
+      <div class="input-group">
+        <input
+          type="text"
+          [(ngModel)]="newTask"
+          (keyup.enter)="addTodo()"
+          placeholder="What needs to be done?"
+          class="todo-input"
+          [disabled]="loading"
+          aria-label="New todo input"
+        />
+        <button
+          (click)="addTodo()"
+          [disabled]="!newTask.trim() || loading"
+          class="add-btn"
+          aria-label="Add new todo"
+        >
+          <span *ngIf="!loading" class="btn-icon">+</span>
+          <span *ngIf="loading" class="loading-spinner"></span>
+        </button>
+      </div>
+    </div>
 
-@keyframes slideUp {
-  from {
-    opacity: 0;
-    transform: translateY(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
+    <!-- Loading State -->
+    <div *ngIf="loading && todos.length === 0" class="loading-state">
+      <div class="loading-spinner-large"></div>
+      <p>Connecting to real-time server...</p>
+    </div>
 
-// ...Header Styles...
-.app-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 30px;
-  text-align: center;
-  // ...existing header styles...
-}
+    <!-- Empty State -->
+    <div *ngIf="!loading && todos.length === 0" class="empty-state">
+      <div class="empty-icon">📝</div>
+      <h3>All caught up!</h3>
+      <p>Add a new todo to get started.</p>
+    </div>
 
-// ...Form, List, and Item Styles...
-.todo-list {
-  padding: 0 30px 30px;
-}
+    <!-- Todo List -->
+    <div class="todo-list" *ngIf="todos.length > 0">
+      <div
+        *ngFor="let todo of todos; trackBy: trackByTodoId"
+        class="todo-item"
+        [class.completed]="todo.completed"
+      >
+        <div class="todo-content">
+          <!-- Checkbox -->
+          <button
+            (click)="toggleComplete(todo)"
+            class="checkbox"
+            [class.checked]="todo.completed"
+            [attr.aria-label]="(todo.completed ? 'Mark as not completed: ' : 'Mark as completed: ') + todo.task"
+          >
+            <span class="checkmark" *ngIf="todo.completed" aria-hidden="true">✓</span>
+          </button>
 
-.todo-item {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  padding: 20px;
-  margin-bottom: 12px;
-  background: white;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  transition: all 0.3s ease;
-  animation: slideInUp 0.4s ease-out;
-  // ...existing item styles...
-}
+          <!-- Task Content -->
+          <div class="task-content" *ngIf="editingId !== todo.id">
+            <span class="task-text">
+              {{ todo.task }}
+            </span>
+          </div>
 
-// ...Loading and Empty States...
-.loading-state, .empty-state {
-  padding: 60px 30px;
-  text-align: center;
-  color: #6b7280;
-  // ...existing state styles...
-}
+          <!-- Edit Mode -->
+          <div class="edit-content" *ngIf="editingId === todo.id">
+            <input
+              #editInput
+              type="text"
+              [(ngModel)]="editingTask"
+              (keyup.enter)="saveEdit(todo.id!)"
+              (keyup.escape)="cancelEditing()"
+              class="edit-input"
+              aria-label="Edit todo input"
+            />
+          </div>
+        </div>
 
-// ...Animations...
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
+        <!-- Action Buttons -->
+        <div class="todo-actions">
+          <div *ngIf="editingId !== todo.id" class="action-buttons">
+            <button
+              (click)="startEditing(todo)"
+              class="action-btn edit-btn"
+              title="Edit"
+              aria-label="Edit todo"
+            >
+              ✏️
+            </button>
+            <button
+              (click)="deleteTodo(todo.id!)"
+              class="action-btn delete-btn"
+              title="Delete"
+              aria-label="Delete todo"
+            >
+              🗑️
+            </button>
+          </div>
 
-// ...Responsive Design...
-@media (max-width: 768px) {
-  .todo-app {
-    padding: 10px;
-  }
-  // ...existing responsive styles...
-}
+          <div *ngIf="editingId === todo.id" class="edit-buttons">
+            <button
+              (click)="saveEdit(todo.id!)"
+              class="action-btn save-btn"
+              title="Save"
+              aria-label="Save changes"
+            >
+              ✓
+            </button>
+            <button
+              (click)="cancelEditing()"
+              class="action-btn cancel-btn"
+              title="Cancel"
+              aria-label="Cancel editing"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Footer with Clear Completed Button -->
+    <footer class="app-footer" *ngIf="completedTodosCount > 0">
+        <button (click)="clearCompleted()" class="clear-btn">
+            Clear {{ completedTodosCount }} Completed Item(s)
+        </button>
+    </footer>
+
+  </div>
+</div>
+
+<!-- Notification Component -->
+<app-notification></app-notification>
