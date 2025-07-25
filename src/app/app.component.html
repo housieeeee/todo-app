@@ -1,152 +1,46 @@
-<div class="todo-app">
-  <div class="container">
-    <!-- Header -->
-    <header class="app-header">
-      <h1 class="app-title">
-        <span class="icon" aria-hidden="true">✓</span>
-        Real-Time Todos
-      </h1>
-      <div class="stats" *ngIf="todos.length > 0">
-        <span class="stat-item">
-          <span class="stat-number">{{ completedTodosCount }}</span>
-          <span class="stat-label">completed</span>
-        </span>
-        <span class="stat-divider">|</span>
-        <span class="stat-item">
-          <span class="stat-number">{{ todos.length }}</span>
-          <span class="stat-label">total</span>
-        </span>
-      </div>
-    </header>
-
-    <!-- Add Todo Form -->
-    <div class="add-todo-section">
-      <div class="input-group">
-        <input
-          type="text"
-          [(ngModel)]="newTask"
-          (keyup.enter)="addTodo()"
-          placeholder="What needs to be done?"
-          class="todo-input"
-          [disabled]="loading"
-          aria-label="New todo input"
-        />
-        <button
-          (click)="addTodo()"
-          [disabled]="!newTask.trim() || loading"
-          class="add-btn"
-          aria-label="Add new todo"
-        >
-          <span *ngIf="!loading" class="btn-icon">+</span>
-          <span *ngIf="loading" class="loading-spinner"></span>
-        </button>
-      </div>
-    </div>
-
-    <!-- Loading State -->
-    <div *ngIf="loading && todos.length === 0" class="loading-state">
-      <div class="loading-spinner-large"></div>
-      <p>Connecting to real-time server...</p>
-    </div>
-
-    <!-- Empty State -->
-    <div *ngIf="!loading && todos.length === 0" class="empty-state">
-      <div class="empty-icon">📝</div>
-      <h3>All caught up!</h3>
-      <p>Add a new todo to get started.</p>
-    </div>
-
-    <!-- Todo List -->
-    <div class="todo-list" *ngIf="todos.length > 0">
-      <div
-        *ngFor="let todo of todos; trackBy: trackByTodoId"
-        class="todo-item"
-        [class.completed]="todo.completed"
-      >
-        <div class="todo-content">
-          <!-- Checkbox -->
-          <button
-            (click)="toggleComplete(todo)"
-            class="checkbox"
-            [class.checked]="todo.completed"
-            [attr.aria-label]="(todo.completed ? 'Mark as not completed: ' : 'Mark as completed: ') + todo.task"
-          >
-            <span class="checkmark" *ngIf="todo.completed" aria-hidden="true">✓</span>
-          </button>
-
-          <!-- Task Content -->
-          <div class="task-content" *ngIf="editingId !== todo.id">
-            <span class="task-text">
-              {{ todo.task }}
-            </span>
-          </div>
-
-          <!-- Edit Mode -->
-          <div class="edit-content" *ngIf="editingId === todo.id">
-            <input
-              #editInput
-              type="text"
-              [(ngModel)]="editingTask"
-              (keyup.enter)="saveEdit(todo.id!)"
-              (keyup.escape)="cancelEditing()"
-              class="edit-input"
-              aria-label="Edit todo input"
-            />
-          </div>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="todo-actions">
-          <div *ngIf="editingId !== todo.id" class="action-buttons">
-            <button
-              (click)="startEditing(todo)"
-              class="action-btn edit-btn"
-              title="Edit"
-              aria-label="Edit todo"
-            >
-              ✏️
-            </button>
-            <button
-              (click)="deleteTodo(todo.id!)"
-              class="action-btn delete-btn"
-              title="Delete"
-              aria-label="Delete todo"
-            >
-              🗑️
-            </button>
-          </div>
-
-          <div *ngIf="editingId === todo.id" class="edit-buttons">
-            <button
-              (click)="saveEdit(todo.id!)"
-              class="action-btn save-btn"
-              title="Save"
-              aria-label="Save changes"
-            >
-              ✓
-            </button>
-            <button
-              (click)="cancelEditing()"
-              class="action-btn cancel-btn"
-              title="Cancel"
-              aria-label="Cancel editing"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Footer with Clear Completed Button -->
-    <footer class="app-footer" *ngIf="completedTodosCount > 0">
-        <button (click)="clearCompleted()" class="clear-btn">
-            Clear {{ completedTodosCount }} Completed Item(s)
-        </button>
-    </footer>
-
+<div class="container">
+  <h1>{{ title() }}</h1>
+  
+  <div class="add-todo">
+    <input 
+      [(ngModel)]="newTodoText" 
+      placeholder="Add a new todo..." 
+      (keyup.enter)="addTodo()">
+    <button (click)="addTodo()" [disabled]="loading">Add</button>
   </div>
-</div>
 
-<!-- Notification Component -->
-<app-notification></app-notification>
+  <div *ngIf="loading" class="loading">Loading...</div>
+
+  <ul class="todo-list">
+    <li *ngFor="let todo of todos; trackBy: trackByTodoId">
+      <div class="todo-item" [class.completed]="todo.is_completed">
+        <input 
+          type="checkbox" 
+          [checked]="todo.is_completed" 
+          (change)="updateTodo(todo)">
+        
+        <ng-container *ngIf="editingId === todo.id; else viewMode">
+          <input 
+            [(ngModel)]="editingTask" 
+            (keyup.enter)="saveEdit(todo.id)" 
+            (blur)="saveEdit(todo.id)">
+          <button (click)="cancelEditing()">Cancel</button>
+        </ng-container>
+        
+        <ng-template #viewMode>
+          <span class="todo-text">{{ todo.text }}</span>
+          <span class="todo-date">{{ formatDate(todo.inserted_at) }}</span>
+        </ng-template>
+        
+        <button (click)="startEditing(todo)">Edit</button>
+        <button (click)="deleteTodo(todo.id)">Delete</button>
+      </div>
+    </li>
+  </ul>
+
+  <div class="stats">
+    Completed: {{ completedTodos }} / Total: {{ totalTodos }}
+  </div>
+
+  <app-notification></app-notification>
+</div>

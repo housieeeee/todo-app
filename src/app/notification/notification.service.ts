@@ -15,6 +15,8 @@ export class NotificationService {
 
   show(message: string, type: 'success' | 'error' = 'success') {
     this.notificationSubject.next({ message, type });
+    // Auto-clear after 3 seconds
+    setTimeout(() => this.clear(), 3000);
   }
 
   clear() {

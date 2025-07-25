@@ -1,12 +1,11 @@
 import { ApplicationConfig } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideClientHydration } from '@angular/platform-browser';
+import { routes } from './app.routes';  // Import your routes
 
-// Since this is a simple single-page app, the routes array is empty.
-// We keep provideRouter for a standard setup.
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter([]),
+    provideRouter(routes),  // Pass the defined routes
     provideClientHydration()
   ]
 };
